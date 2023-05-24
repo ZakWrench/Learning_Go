@@ -24,13 +24,13 @@ func main() {
 	names := map[int]string{1: "Alice", 2: "Bob", 3: "Charlie"}
 
 	// Functions and Recursion
-	sum := calculateSum(numbers...)
+	sum_2 := calculateSum(numbers...)
 	factorial := calculateFactorial(5)
 
 	fmt.Println("Area of the circle:", area)
 	fmt.Println("Numbers:", numbers)
 	fmt.Println("Names:", names)
-	fmt.Println("Sum of numbers:", sum)
+	fmt.Println("Sum of numbers:", sum_2)
 	fmt.Println("Factorial of 5:", factorial)
 }
 
