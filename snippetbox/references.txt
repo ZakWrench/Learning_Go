@@ -36,3 +36,35 @@ It has the nice side-effect that you can register patterns in any order and it w
 
 -If a subtree path has been registered and a request is received for that subtree path without a trailing slash, then the user will automatically be sent `301 Permanent Redirect` to the subtree path with the slash added. For example: if you have registered the subtree path `/foo/`, then any request to `/foo` will be redirected to `/foo/`.
 
+Host name matching:
+We can include host names in our URL patterns. Which can be useful when we want to redirect all HTTP requests to a canonical URL, or if our application is acting as the back end for multiple sites or services
+for example: """
+mux := http.NewServeMux()
+mux.HandleFunc("foo.example.org/", fooHandler)
+mux.HandleFunc("bar.example.org/", barHandler)
+mux.HandleFunc("/baz", bazHandler)
+when it comes to pattern matching, any host-specific patterns will be checked first and if there is a match the request will be dispatched to the corresponding handler.
+Only when the isn't a host-specific match found will the non-host specific patterns also be checked.
+
+RESTful routing:
+Go's servermux doesn't support routing based on the request method, it doesn't support clean URLs with variables in them, and it doesn't support regexp-based patterns.
+We'll for 3rd party routers instead of Go's servemux.
+
+Customizing HTTP headers:
++--------+----------------+--------------+---------------------------+
+| Method | Pattern        | Handler      | Action                    |
++--------+----------------+--------------+---------------------------+
+| ANY    | /              | home         | Display the home page     |
+| ANY    | /snippet/view  | snippetView  | Display a specific snippet|
+| POST   | /snippet/create| snippetCreate| Create a new snippet      |
++--------+----------------+--------------+---------------------------+
+
+after changing the create function to only accept POST requests, some nuances must be considered:
+- It's only possible to call w.WriteHeader() once per response, and after the status code has been written it can't be changed. If you try to call w.WriteHeader() a second time Go will log a warning message.
+- If you don't call w.WriteHeader() explicitly, then the first call to w.Write() will automatically send a 200 OK status code to the user. So, if you want to send a non-200 status code, you must call  w.WriteHeader() before any call to w.Write().
+
+Customizing headers:
+We can include an `Allow` header with the "405 Method Not Allowed" response to let the user know which request methods are supported for that particular URL.
+We can do this by using the w.Header().Set() method to add a new header to the response header map.
+- Important 2: Changing the response header map after a call to w.WriteHeader() or w.Write() will no effect on the headers that the user receives. You need to make sure that your response header map contains all the headers you want before you call these methods.
+
