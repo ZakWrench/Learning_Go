@@ -23,3 +23,16 @@ This explains why "/" pattern is acting like a catch-all. it means match a singl
 
 Restricting the root url pattern:
 We can include a simple check in the `home` handler which ultimately has the same effect:
+
+DefaultServeMux:
+http.HandleFunc("/", home) -> do not use because DefaultServeMux is a global variable, any package can access it and register a route.
+use x := http.DefaultServeMux(), then mux.HandleFunc("/home", home)
+
+Servemux features and quirks:
+-Go's servemux, longer URL patterns always take precedence over shorter ones. So if a servemux contains multiple patterns which match a request, it will always dispatch the request to the handler corresponding to the longest pattern.
+It has the nice side-effect that you can register patterns in any order and it won't change how the servemux behaves.
+
+-Request URL paths are automatically sanitized. If the request path contains any . or .. elements or repeated slashes, the user will automatically be redirected to an equivalent clean URL. For example, if a user makes a request to /foo/bar/..//baz they will automatically be sent a `301 Permanent Redirect` to `/foo/baz` instead.
+
+-If a subtree path has been registered and a request is received for that subtree path without a trailing slash, then the user will automatically be sent `301 Permanent Redirect` to the subtree path with the slash added. For example: if you have registered the subtree path `/foo/`, then any request to `/foo` will be redirected to `/foo/`.
+
