@@ -1,0 +1,7 @@
+Web App basics:
+-A handler is like a controller, responsible for executing your application logic and for writing HTTP response headers and bodies.
+-A router(servermux) stores mapping between the URL patterns for your application and the corresponding handlers. We usually have one sermux for your application containing all your routes.
+-A web server. We can establish a web server and listen for incoming requests as part of the application itself. No need for external 3rd party server like Nginx or Apache.
+
+Note 1: The home handler function is just a regular Go function with two parameters. The `http.ResponseWriter` parameter provides methods for assembling a HTTP response and sending it to the user, and the `*http.Request` parameter is a pointer to a struct which holds infos about the current request(like the HTTP method and the URL being requested)
+
