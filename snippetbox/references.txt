@@ -140,3 +140,18 @@ Additional information: Theinternal directory
 It's important to point out that the firectory nae `internal` carries a special meaning and behavior in Go: any packages which live under this directory can only be imported by code |inside theparent of the `internal` directory|. In our case, thismeans thatany packages which live in `internal` can only beimported by codeinside our `snippetbox` project dir.
 Or, looking at it the other way, this means that any packages under `internal` |cannot be imported by code outside of your project|
 This is useful beause it prevents other codebases from importing and relying on the packages in our `internal` dir, even if the project code is publicly available somewhere like GitHub.
+
+- HTML Templating and Inheritance:
+We start creating a template file at `ui/html/pages/home.tmpl` which contain HTML content for our home page.
+Note 3: the `.tmpl` extension doesn't convey any special meaning or behavior here. I've only chosen this extension because it's a nice way of making it clear that the file contains a Go template when you're browsing a list of files. We can always use .html extension, or use a 'double extension' like `.tmpl.html`.
+Next we need to use Go's `html/template` package, which provides a family of functions for safely parsing and rendering HTML templates. We can use the funcions in the package to parse the template file and then execute the template.
+
+Template composition:
+As we add more pages to this web application there will be some shared, boulerplate, HTML markup that we want to include on every page, like the header, navigation, and metadata inside the <head> HTML element.
+So it's a good idea to create a base(or master) template which contains this shared content, which we can then compose with the page-specific markup for the individual pages. We'll create a new ui/html/base.tmpl file
+
+We use the {{define "base"}}...{{end}} action to define a distinct named template called `base`, which contain the content we want to appear on every page.
+Here we're use the {{template "title" .}} and {{template "main" .}} actions to denote that we want to inove other named templates(caled `title` and `main`) at a particular point in the HTML.
+Note 4: the dot at the end of the {{template "title" .}} action represent any dynamic data that you want to pass to the invoked template.
+
+So now, instead of containing HTML directly, our template set contains 3 named templates, base, title, and main. We use `ExecuteTemplate()` method to tell Go that we specifically want to respond using the content of the `base` template(which in turn invokes our `title` and `main` template)
