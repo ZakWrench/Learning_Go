@@ -121,3 +121,22 @@ We update the snippetView handler function to do 2 things:
 2-Because the id parameter is untrusted user input, we should validate it to make sure it's sane and sensible. We want to check that it contains a positive integer value. We try to convert the string value to an integer with `strconv.Atoi()`, then checking the value is greater than zero.
 
 The io.writer interface:
+fmt.Fprintf(w io.Writer, format string, a ...any)(n int, err error)
+But we passed it our http.ResponseWriter object instead, and worked fine.
+We can do this because the io.Writer type is an nterface, and http.ResponseWriter object "satisfies the interface" because it has a w.Write() method.
+Overall, anywhere you see io.Writer parameter it's OK to pass in your http.ResponseWriter object, whatever is being written will subsequently be sent as the body of the HTTP response.
+
+-Project Structure and Organization:
+->Don't over-complicate things. Only try hard to add structure and complexity owhen it's demonstrably needed.
+
+-The `cmd` dir wil contain the `application-specific` code for the executable applications in the project. for now we'll have just one executable application "The Web Application" which will live under the cmd/web dir.
+-The `internal` dir will contain the ancillary `non-application-specific` code used in the project. We'll use it to hold potentially reusable code like validation helpers and the SQL database models for the project.
+-The `ui` dir will contain the `user-interface assets` used by the web application. Specifically, the `ui/html` dir will contain HTML templates, and the `ui/static` dir will contain static files(like CSS and images)
+This has 2 advantages:
+1- It gives a clean separation between Go and non-Go assets. All the Go code we write will live exclusively under the `cmd` and `internal` dir, leaving the project root free to hold non-Go assets like UI files, makefiles and module definitions(including our go.mod). This can make things easier to manage when it comes to building and deploying our application in the future.
+2- It scales really nicely if you want to add another executable application to your project. For example, we might want to add a CLI to automate some administrative tasks in the future. With this structure, we could create this CLI app under `cmd/cli` and it will be able to import and reuse all the code you've written under the `internal` dir.
+
+Additional information: Theinternal directory
+It's important to point out that the firectory nae `internal` carries a special meaning and behavior in Go: any packages which live under this directory can only be imported by code |inside theparent of the `internal` directory|. In our case, thismeans thatany packages which live in `internal` can only beimported by codeinside our `snippetbox` project dir.
+Or, looking at it the other way, this means that any packages under `internal` |cannot be imported by code outside of your project|
+This is useful beause it prevents other codebases from importing and relying on the packages in our `internal` dir, even if the project code is publicly available somewhere like GitHub.
