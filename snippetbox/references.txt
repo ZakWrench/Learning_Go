@@ -219,4 +219,39 @@ Disabling directory listings:
 If we want to disable directory listings there are a few differernt approaches we can take:
 The simplest way is to add a blank 'index.html' file to the specific directory that we want to disable listings for. This will then be served instead of the directory listing, and the user will get a 200 OK response with no body. If you want to do this for all directories under './ui/static' we can use the command:
 $ find ./ui/static -type d -exec touch {}/index.html \;
-A more complicated(but arguably better) solution is to create a custom implementation of `http.FileSystem`, and have it return an `os.ErrNotExist` error for any dirs.
+A more complicated(but arguably better) solution is to create a custom implementation of `http.FileSystem`, and have it return an `os.ErrNotExist` error for any dirs.  
+
+THE `http.Handler` INTERFACE:
+What we mean by handler is "an object which satifies the `http.Handler` interface":
+type Handler interface {
+    ServeHTTP(ResponseWriter, *Request)
+}
+So in its simple terms, this basically means that to be a handler, an object must have a `ServeHTTP()` method with the exact signature: ServerHTTP(http.ResponseWriter, *http.Request)
+So in its simplest form a handler look something like this:
+type home struct {}
+func (h *home) ServeHTTP(w http.ResponseWriter, r * http.Request){
+    w.Write([]byte("This is my home page"))
+}
+Here we have an object(in this case it's a 'home' struct, but it could equally be a string or function or anything else), and we've implemented a method with the signature `ServeHTTP(http.ResponseWriter, *http.Request)` on it. Tha't all we need to make a handler.
+We could then register this with a servemux using the`Handle` method like so:
+mux := http.NewServerMux()
+mux.Handle("/", &home{})
+When this servemux receives a HTTP request for "/", it will then call the ServerHTTP() method of the `home` struct, which in turn writes the HTTP response.
+
+Handler Functions:
+Now, creating an object just so we can implement a `ServeHTTP()` method on it is long-winded and a bit confusing. Which is why in practice it's far more common to write your handlers as a normal function(like we have been so far). For example:
+func home(w http.ResponseWriter, r *http.Request){
+    w.Write([]byte("This is my home page"))
+}
+But this `home` function is just a notmal function; it doesn't have a `ServeHTTP()` method. So in itself it "isn't a handler".
+Instead we can transform it into a handler using the `http.HandlerFunc()` adapter, like so:
+mux := http.NewServeMux()
+mux.Handle("/", http.HandlerFunc(home))
+
+The `http.HandlerFunc()` adapter works by automatically adding a `ServeHTTP()` method to the `home` function. When executed, this`ServeHTTP()` method then simply "calls the content of the original `home` function". it's a roundabout but convenient way of coercing a normal function into satisfying the `http.Handler` interface.
+Throughout this project so far we've been using the `HandleFunc()` method to register our handler function with the servemux. This is just some syntactic sugar that transform a function to a handler andregisters it in one step, instaed of having to do it manually. The code above is functioanlity equivalent to this:
+mux := http.NewServeMux()
+mux.HandleFunc("/", home)
+
+Chaining Handlers:
+
