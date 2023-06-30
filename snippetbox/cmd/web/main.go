@@ -9,7 +9,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	// Create a file server which serves files out of the "./ui/static" directory.
-	//Note that the path given to the http.Dir function is relative to the project directory root.
+	// Note that the path given to the http.Dir function is relative to the project directory root.
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
 
 	// use the mux.Handle() function to register the file server as the handler for
