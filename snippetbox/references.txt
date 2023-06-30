@@ -191,3 +191,32 @@ When creating http.FileServer handler, we use the `http.FileServer()` function l
 fileServer := http.FileServer(http.Dir("./ui/static/"))
 When this handler receives a request, it will remove the leading slash from the URL path and then search the `./ui/static` for the corresponding file to send to the user.
 So, for this to work correctly, we must strip the leading "/static" from the URL path 'before' passing it to `http.FileServer'. Otherwise it will be looking for a file which doesn't exist and the user will receive a '404 page not found' response. Fortunately, Go includes a `http.StripPrefix()' helper specifically fot this task.
+
+Using the static files:
+With the file server working properly, we can now update the ui/html/base.tmpl file to make use of the static files.
+
+Additional Information:
+- Features and functions:
+Go's file server has a few really nice features that are worth mentioning:
+-> It sanitizes all request paths by running them through the `path.Clean()` function before searching for a file. this removes any . and .. elements from the URL path, which helps to stop directory traversal attacks. This feature is particularly useful if you're using the fileserver in conjuction with a router that doesn't automatically sanitize URL paths.
+-> Range requests are fully supported. This is greate if your application is serving large files and you want to support resumable downloads. You can see this functionality in action if you use curl to request bytes 100-199 of the 'logo.png' file like so:
+curl -i -H "Range: bytes=100-199" --output - http://localhost:4000/static/img/logo.png
+-> To reduce latency and processing overhead for both the client and server, the 'Last-Modified' and 'If-Modified-Since' headers are transparently supported. If a file hasn't changed since the user last requested it, then `http.FileServer` will send a '304 Not Modified' status code instead of the file itself.
+-> The 'Content-Type' is automatically set from the file extension using the `mime.TypeByExtension()` function. You can add your own custom extensions and content types using the `mime.AddExtensionType()` function if necessary.
+
+-Performance:
+In our previous code, we've set up our file server so that it serves files out of the './ui/static' dir on our hard disk.
+But it's important to note that, once the application is up-and-running, `http.FileServer` probably won't be reading these files from disk. Both Windows and Unix-based OS cache recently-used in RAM. so(for frequently-served files at least) it's likely that `http.FileServer` will be serving them from RAM rather than making the relatively slow round-trip to your hard disk.
+
+-Serving single files:
+Sometimes you might want to server a single file from within a handler. For this there's the `http.ServeFile()` function, which we can use like so:
+func downloadHandler(w http.ResponseWriter, r *http.Request) {
+    http.ServerFile(w, r, *./ui/static/file.zip)
+}
+WARNING 1: `http.ServeFile()` does not automatically sanitize the file path. If you're constructing a file path from untrusted user input, to avoid directory traversal attacks you must sanitize the input with filepath.Clean() before using it.
+
+Disabling directory listings:
+If we want to disable directory listings there are a few differernt approaches we can take:
+The simplest way is to add a blank 'index.html' file to the specific directory that we want to disable listings for. This will then be served instead of the directory listing, and the user will get a 200 OK response with no body. If you want to do this for all directories under './ui/static' we can use the command:
+$ find ./ui/static -type d -exec touch {}/index.html \;
+A more complicated(but arguably better) solution is to create a custom implementation of `http.FileSystem`, and have it return an `os.ErrNotExist` error for any dirs.
