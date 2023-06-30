@@ -155,3 +155,38 @@ Here we're use the {{template "title" .}} and {{template "main" .}} actions to d
 Note 4: the dot at the end of the {{template "title" .}} action represent any dynamic data that you want to pass to the invoked template.
 
 So now, instead of containing HTML directly, our template set contains 3 named templates, base, title, and main. We use `ExecuteTemplate()` method to tell Go that we specifically want to respond using the content of the `base` template(which in turn invokes our `title` and `main` template)
+
+Embedding partials:
+We might want to break out certain bits of HTML into partials that can be reused in different pages or layouts.
+
+Additional informations:
+-The block action:
+We used {{template}} action to invoke onetemplate from another.
+But Go also provides a {{block}} ... {{end}} action which you can use instead. This acts like the {{template}} action, except it allows you to speciy some default content if the template being invoked `doesn't exist in the current template set`.
+In the context of a web application, this is useful when you want to provide some default content(such as sidebar) which individual pages can override on a case-by-case basis if they need to.
+Syntactically you use it like this:
+{{define "base"}}
+    <h1>An example template</h1>
+    {{block "sidebar" .}}
+        <p>My default sidebar content</p>
+    {{end}}
+{{end}}
+But if you want, you don't need to include any default content between the {{block}} and {{end}} actions. In that case, the invoked template acts like it's 'optional'. If the template exist in the template set, then it will be rendered. But if it doesn't , then nothing will be displayed.
+-Embedding files:
+Go also provides the `embed` package which makes it possible to 'embed files into our Go program itself rather than reading them from disk'.
+
+-SERVING STATIC FILES:
+The http.Fileserver handler:
+Go's `net/http` package ships with a built-in http.FileServer handler which you can use to serve files over HTTP from a specific directory. Let's add a new route to our applicatoin so that all requests which begin with "/static/" are handled using this:
+
+| Method | Pattern                   | Handler        | Action                    |
+|--------|---------------------------|----------------|---------------------------|
+| ANY    | /                         | home           | Display the home page     |
+| ANY    | /snippet/view?id=1        | snippetView    | Display a specific snippet|
+| POST   | /snippet/create           | snippetCreate  | Create a new snippet      |
+| ANY    | /static/                  | http.FileServer| Serve a specific static file |
+
+Remember, The pattern "/static/" is a subtree path pattern, so it acts a bit like there is a wildcard at the end.
+When creating http.FileServer handler, we use the `http.FileServer()` function like this:
+fileServer := http.FileServer(http.Dir("./ui/static/"))
+When this handler receives a request, it will remove the leading slash from the URL path and then search the `./ui/static` for the corresponding file to send to the user.

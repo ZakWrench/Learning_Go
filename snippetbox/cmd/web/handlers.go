@@ -19,6 +19,8 @@ func home(w http.ResponseWriter, r *http.Request) {
 	files := []string{
 		"./ui/html/base.tmpl",
 		"./ui/html/pages/home.tmpl",
+		//the base template should now invoke the `nav` template.
+		"./ui/html/partials/nav.tmpl",
 	}
 
 	// Use the template.ParseFiles() function to read the files and store the

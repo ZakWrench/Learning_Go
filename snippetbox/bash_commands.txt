@@ -1,1 +1,4 @@
 mkdir -p cmd/web internal ui/html ui/static
+
+curl https://www.alexedwards.net/static/sb-v2.tar.gz | tar -xvz -C ./ui/static/
+
