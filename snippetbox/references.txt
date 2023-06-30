@@ -190,3 +190,4 @@ Remember, The pattern "/static/" is a subtree path pattern, so it acts a bit lik
 When creating http.FileServer handler, we use the `http.FileServer()` function like this:
 fileServer := http.FileServer(http.Dir("./ui/static/"))
 When this handler receives a request, it will remove the leading slash from the URL path and then search the `./ui/static` for the corresponding file to send to the user.
+So, for this to work correctly, we must strip the leading "/static" from the URL path 'before' passing it to `http.FileServer'. Otherwise it will be looking for a file which doesn't exist and the user will receive a '404 page not found' response. Fortunately, Go includes a `http.StripPrefix()' helper specifically fot this task.
