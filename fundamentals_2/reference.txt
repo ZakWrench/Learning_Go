@@ -25,3 +25,8 @@ go build main.go
 ./main
 or abstract the compilation with:
 go run main.go
+
+Array have a fixed length defined at the declaration.
+Arrays are limiting for cases when the values of array changes in runtime. Arrays also do not provide the ability to get a subarray. For this, Golang has a data type called slices.
+Slices store a sequence of elements and can be expanded at any time. Slice declaration is similar to an array declaration, without the capacity defined:
+`var b []int`
